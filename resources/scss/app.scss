@@ -1,0 +1,31 @@
+#login {
+    background-color: #F4F6F5;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    .sign-in-with {
+        margin-top: 5rem;
+    }
+
+    .continue-with-google {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        gap: 1rem;
+        padding: 1rem 3rem;
+        background-color: white;
+        border-radius: 0.625rem;
+        text-decoration: none;
+        color: #000000a6;
+    }
+}
+
+img {
+    max-width: 100%;
+}
+
+.logo {
+    width: 50%;
+    margin-top: 5rem;
+}
