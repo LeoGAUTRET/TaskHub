@@ -52,20 +52,9 @@
             </div>
         </nav>
 
-        @if(isset($username))
-            <h1>Bienvenue, {{ $username }} !</h1>
-        @endif
-
-        @if (isset($currentAddress))
-            <p>{{ $currentAddress }}</p>
-        @endif
-
-        @if (isset($events))
+        @if(isset($events))
             @foreach($events as $event)
-                <div>
-                    <p>{{ $event->title }}</p>
-                    <p>{{ $event->start }}</p><br>
-                </div>
+                <p>{{ $event->title }}</p><br>
             @endforeach
         @endif
     </body>

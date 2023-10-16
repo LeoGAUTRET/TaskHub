@@ -15,7 +15,7 @@
     </head>
     <body id="login">
         <img src="{{ asset('images/TaskHub.png') }}" alt="Logo" class="logo">
-
+        
         <div class="sign-in-with">Sign In</div>
 
         <a href="{{ url('/auth/google') }}" class="continue-with-google">

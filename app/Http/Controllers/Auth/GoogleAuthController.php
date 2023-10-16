@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Auth;
 use Socialite;
 use Google_Client;
 
+use App\Models\User;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Session;
@@ -55,7 +56,15 @@ class GoogleAuthController extends Controller
         $userUrlPicture = $userInfo['picture'];
         $userLanguage = $userInfo['locale'];
 
-        #TODO Create or Update user informations
+        User::updateOrCreate(
+            ['user_id' => $userId],
+            [
+                'name' => $userName,
+                'email' => $userEmail,
+                'url_picture' => $userUrlPicture,
+                'language' => $userLanguage,
+            ]
+        );
 
         if (is_array($accessToken)) {
             $accessToken = json_encode($accessToken);

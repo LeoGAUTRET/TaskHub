@@ -2,8 +2,11 @@
 
 namespace App\Http\Controllers;
 
+use Carbon\Carbon;
 use Illuminate\Http\Request;
+use App\Models\CalendarEvent;
 use Illuminate\Support\Facades\Session;
+use App\Http\Controllers\GoogleMapController;
 
 class HomeController extends Controller
 {
@@ -14,7 +17,19 @@ class HomeController extends Controller
     {
         $userName = Session::get('user_name');
 
-        return view('home', ['username' => $userName]);
+        $googleMapController = new GoogleMapController();
+        $currentAddress = $googleMapController->getCurrentAdress();
+
+        $googleCalendarController = new GoogleCalendarController();
+        $googleCalendarController->createOrUpdate();
+
+        $today = Carbon::now()->toDateString(); // Obtenez la date d'aujourd'hui sous forme de chaîne
+
+        $events = CalendarEvent::whereDate('start', '=', $today)->get();
+
+        dd($events);
+
+        return view('home', ['username' => $userName, 'currentAddress' => $currentAddress, 'events' => $events]);
     }
 
     /**

@@ -2,17 +2,12 @@
 
 namespace App\Models;
 
-// use Illuminate\Contracts\Auth\MustVerifyEmail;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Foundation\Auth\User as Authenticatable;
-use Illuminate\Notifications\Notifiable;
-use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Database\Eloquent\Model;
 
-class User extends Authenticatable
+class CalendarEvent extends Model
 {
-    use HasApiTokens, HasFactory, Notifiable;
-
-    protected $primaryKey = 'user_id';
+    use HasFactory;
 
     /**
      * The attributes that are mass assignable.
@@ -20,12 +15,15 @@ class User extends Authenticatable
      * @var array<int, string>
      */
     protected $fillable = [
+        'calendar_event_id',
+        'title',
+        'description',
+        'location',
+        'color_id',
+        'start',
+        'end',
+        'etag',
         'user_id',
-        'name',
-        'email',
-        'url_picture',
-        'language',
-        'calendar_etag',
     ];
 
     /**
@@ -48,10 +46,8 @@ class User extends Authenticatable
     //     'password' => 'hashed',
     // ];
 
-    public $incrementing = false; // Désactiver l'incrémentation automatique
-
-    public function events()
+    public function user()
     {
-        return $this->hasMany(Event::class);
+        return $this->belongsTo(User::class);
     }
 }

@@ -2,45 +2,23 @@
 
 namespace App\Http\Controllers;
 
+use Carbon\Carbon;
 use Google_Client;
 use App\Models\User;
 use Google_Service_Calendar;
 use Illuminate\Http\Request;
+use App\Models\CalendarEvent;
 use Illuminate\Support\Facades\Cookie;
 
 class GoogleCalendarController extends Controller
 {
     public function index()
     {
-        // Récupérez le jeton d'accès depuis la session
-        $accessToken = Cookie::get('google_access_token');
+        $this->createOrUpdate();
 
-        // Créez une nouvelle instance de Google_Client
-        $client = new Google_Client();
-        $client->setClientId(env('GOOGLE_CLIENT_ID'));
-        $client->setClientSecret(env('GOOGLE_CLIENT_SECRET'));
-        $client->setRedirectUri(env('GOOGLE_REDIRECT'));
-        $client->setAccessType('offline');
+        $events = CalendarEvent::all();
 
-        // Configurez le client avec le jeton d'accès
-        $client->setAccessToken($accessToken);
-
-        // Assurez-vous que le jeton d'accès est valide
-        if ($client->isAccessTokenExpired()) {
-            // Redirigez l'utilisateur vers l'URL d'autorisation
-            $authUrl = $client->createAuthUrl();
-            return redirect($authUrl);
-        }
-
-        // Utilisez le client pour accéder à Google Calendar
-        $service = new Google_Service_Calendar($client);
-
-        // Liste des événements du calendrier
-        $events = $service->events->listEvents('primary');
-
-        // Faites quelque chose avec la liste des événements
-        // var_dump($events);
-        print("<pre>".print_r($events,true)."</pre>");
+        return view('calendar', ['events' => $events]);
     }
 
     public function callback(Request $request)
@@ -68,16 +46,60 @@ class GoogleCalendarController extends Controller
     {
         $events = $this->getCalendar();
 
-        $user = User::find(Cookie::get('google_user_id'));
+        $user = User::where('user_id', Cookie::get('google_user_id'))->first();
+
+        #TODO lors de l'enregistrement, si l'evenement est sur toute la journée cela crée une exeption et met la date au moment de la création du model
 
         if($user) {
             $etag = $events['etag'];
-            $bddetag = $user->etag; #TODO create or update calendar with bdd user_calendar with etag
+            $bddetag = $user->calendar_etag;
 
-            if ($etag !== $bddetag) {
-                foreach($events['items'] as $item) {
-                    #TODO Update le calendrier
+            if ($etag !== $bddetag || $bddetag === null) {
+                foreach($events['items'] as $event) {
+                    $calendar_event = CalendarEvent::where('calendar_event_id', $event->id)->first();
+                    $event_etag = $event->etag;
+
+                    if($event->colorId === null) {
+                        $colorId = 12;
+                    }
+                    else {
+                        $colorId = $event->colorId;
+                    }
+
+                    if(!isset($calendar_event)) {
+                        $newEvent = new CalendarEvent([
+                            'calendar_event_id' => $event->id,
+                            'title' => $event->summary,
+                            'description' => $event->description,
+                            'location' => $event->location,
+                            'color_id' => $colorId,
+                            'start' => Carbon::parse($event->start->dateTime),
+                            'end' => Carbon::parse($event->end->dateTime),
+                            'etag' => $event_etag,
+                            'user_id' => $user->user_id,
+                        ]);
+                        $newEvent->save();
+                    }
+                    else {
+                        $calendar_event_etag = $calendar_event->etag;
+
+                        if ($event_etag !== $calendar_event_etag) {
+                            $calendar_event->update([
+                                'title' => $event->summary,
+                                'description' => $event->description,
+                                'location' => $event->location,
+                                'color_id' => $colorId,
+                                'start' => Carbon::parse($event->start->dateTime),
+                                'end' => Carbon::parse($event->end->dateTime),
+                                'etag' => $event_etag,
+                                'user_id' => $user->user_id,
+                            ]);
+                        }
+                    }
                 }
+
+                $user->calendar_etag = $etag;
+                $user->save();
             }
         }
 
@@ -86,35 +108,27 @@ class GoogleCalendarController extends Controller
 
     public function getCalendar()
     {
-        // Récupérez le jeton d'accès depuis la session
         $accessToken = Cookie::get('google_access_token');
 
-        // Créez une nouvelle instance de Google_Client
         $client = new Google_Client();
         $client->setClientId(env('GOOGLE_CLIENT_ID'));
         $client->setClientSecret(env('GOOGLE_CLIENT_SECRET'));
         $client->setRedirectUri(env('GOOGLE_REDIRECT'));
         $client->setAccessType('offline');
 
-        // Configurez le client avec le jeton d'accès
         $client->setAccessToken($accessToken);
 
-        // Assurez-vous que le jeton d'accès est valide
         if ($client->isAccessTokenExpired()) {
-            // Redirigez l'utilisateur vers l'URL d'autorisation
             $authUrl = $client->createAuthUrl();
             return redirect($authUrl);
         }
 
-        // Utilisez le client pour accéder à Google Calendar
         $service = new Google_Service_Calendar($client);
 
-        // Liste des événements du calendrier
         $events = $service->events->listEvents('primary');
 
-        return $events;
+        // print("<pre>".print_r($events,true)."</pre>");
 
-        // Faites quelque chose avec la liste des événements
-        // var_dump($events);
+        return $events;
     }
 }

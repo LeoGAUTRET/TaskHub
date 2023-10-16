@@ -17,6 +17,7 @@ return new class extends Migration
             $table->string('email')->unique();
             $table->string('url_picture');
             $table->string('language');
+            $table->string('calendar_etag')->nullable();
             $table->timestamps();
         });
     }

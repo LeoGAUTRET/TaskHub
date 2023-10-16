@@ -3,6 +3,7 @@
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\GoogleCalendarController;
 use App\Http\Controllers\Auth\GoogleAuthController;
+use App\Http\Controllers\GoogleMapController;
 use App\Http\Controllers\HomeController;
 
 /*
@@ -24,6 +25,8 @@ Route::get('/auth/google/callback', [GoogleAuthController::class, 'handleGoogleC
 Route::middleware(['auth'])->group(function () {
 
     Route::get('/', [HomeController::class, 'index'])->name('home');
+    // Route::get('/route', [GoogleMapController::class, 'calculateRoute'])->name('route');
+    Route::get('/route', [GoogleMapController::class, 'getCurrentAdress'])->name('route');
 
     Route::get('/calendar', [GoogleCalendarController::class, 'index'])->name('calendar.redirect');
     Route::get('/auth/google/calendar/callback', [GoogleCalendarController::class, 'callback'])->name('calendar.callback');
